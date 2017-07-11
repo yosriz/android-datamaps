@@ -2,10 +2,10 @@ package com.yosriz.datamaps.android;
 
 import java.util.List;
 
-public class GeoChartData {
+public class DataMapsData {
     private final List<CountryData> countries;
 
-    public GeoChartData(List<CountryData> countries) {
+    public DataMapsData(List<CountryData> countries) {
         this.countries = countries;
     }
 

@@ -4,7 +4,7 @@
 <div
         id="container"
         style="position: relative; width: 1600px; height: 1040px;"></div>
-<script>	
+<script>
 	document.addEventListener("DOMContentLoaded", function(event) {
 		loadingListener.loadSuccess();
 	});
@@ -86,7 +86,7 @@
 	 var countriesArray = JSON.parse(mapData.getCountriesJson());
 	 var markersArray = new Array(countriesArray.length);
 	 for (var i = 0 ; i < countriesArray.length; i++){
-			markersArray[i] =  {centered : countriesArray[i].country};			
+			markersArray[i] =  {centered : countriesArray[i]};
 	 }
      function setMarkers() {
        map.markers(

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Scanner;
 
 
-public class GeoChartView extends WebView {
+public class DataMapsView extends WebView {
 
     public static final double MAP_ASPECT_RATIO = 0.66875;
     private GeoChartLoadingListener geoChartLoadingListener;
@@ -39,16 +39,16 @@ public class GeoChartView extends WebView {
         void onFailure();
     }
 
-    public GeoChartView(Context context) {
+    public DataMapsView(Context context) {
         this(context, null);
     }
 
-    public GeoChartView(Context context, AttributeSet attrs) {
+    public DataMapsView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    public GeoChartView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public DataMapsView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         if (!isInEditMode()) {
@@ -106,7 +106,7 @@ public class GeoChartView extends WebView {
     }
 
     @SuppressLint("DefaultLocale")
-    public void loadData(GeoChartData data) {
+    public void loadData(DataMapsData data) {
 
         cancelCurrentLoad();
         setMapData(data);
@@ -119,6 +119,7 @@ public class GeoChartView extends WebView {
                 );
             }
         };
+        thread.start();
     }
 
     private void cancelCurrentLoad() {
@@ -135,7 +136,7 @@ public class GeoChartView extends WebView {
         cancelCurrentLoad();
     }
 
-    private void setMapData(GeoChartData data) {
+    private void setMapData(DataMapsData data) {
 
         Point webViewSize = calculateWebViewSize();
         setWebViewHeight(webViewSize);
@@ -150,10 +151,10 @@ public class GeoChartView extends WebView {
         addJavascriptInterface(mapData, "mapData");
     }
 
-    private String toJson(List<GeoChartData.CountryData> data) {
+    private String toJson(List<DataMapsData.CountryData> data) {
         JSONArray jsonArray = new JSONArray();
 
-        for (GeoChartData.CountryData countryData : data) {
+        for (DataMapsData.CountryData countryData : data) {
             jsonArray.put(countryData.country);
         }
 
