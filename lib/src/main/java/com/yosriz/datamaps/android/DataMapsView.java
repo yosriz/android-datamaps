@@ -3,6 +3,7 @@ package com.yosriz.datamaps.android;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.res.TypedArray;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Handler;
@@ -30,6 +31,7 @@ public class DataMapsView extends WebView {
     private GeoChartLoadingListener geoChartLoadingListener;
     private Handler handler = new Handler();
     private Thread thread;
+    private String markerIcon;
     private int markerWidth;
     private int markerHeight;
 
@@ -62,9 +64,14 @@ public class DataMapsView extends WebView {
 
         enableDebuggingIfNecessary(context);
 
-        //TODO init from xml
-        markerWidth = 50;
-        markerHeight = 50;
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.DataMapsView, 0, 0);
+        try {
+            markerWidth = ta.getDimensionPixelSize(R.styleable.DataMapsView_marker_width, 50);
+            markerHeight = ta.getDimensionPixelSize(R.styleable.DataMapsView_marker_height, 50);
+            markerIcon = ta.getString(R.styleable.DataMapsView_marker_icon);
+        } finally {
+            ta.recycle();
+        }
     }
 
     private void enableDebuggingIfNecessary(Context context) {
@@ -122,6 +129,45 @@ public class DataMapsView extends WebView {
         thread.start();
     }
 
+    /**
+     * Sets marker icon, icon file must be placed at assets folder
+     *
+     * @param markerIcon icon assets filename
+     */
+    public void setMarkerIcon(String markerIcon) {
+        this.markerIcon = markerIcon;
+    }
+
+    /**
+     * Sets marker icon width
+     *
+     * @param markerWidth marker icon width
+     */
+    public void setMarkerWidth(int markerWidth) {
+        this.markerWidth = markerWidth;
+    }
+
+    /**
+     * Sets marker icon height
+     *
+     * @param markerHeight marker icon height
+     */
+    public void setMarkerHeight(int markerHeight) {
+        this.markerHeight = markerHeight;
+    }
+
+    public String getMarkerIcon() {
+        return markerIcon;
+    }
+
+    public int getMarkerWidth() {
+        return markerWidth;
+    }
+
+    public int getMarkerHeight() {
+        return markerHeight;
+    }
+
     private void cancelCurrentLoad() {
         handler.removeCallbacksAndMessages(null);
         if (thread != null && !thread.isInterrupted()) {
@@ -145,17 +191,18 @@ public class DataMapsView extends WebView {
         String dataJson = toJson(data.getCountries());
         MapData mapData = new MapData(markerWidth,
                 markerHeight,
+                markerIcon,
                 webViewSize.x, webViewSize.y,
                 dataJson
         );
         addJavascriptInterface(mapData, "mapData");
     }
 
-    private String toJson(List<DataMapsData.CountryData> data) {
+    private String toJson(List<CountryData> data) {
         JSONArray jsonArray = new JSONArray();
 
-        for (DataMapsData.CountryData countryData : data) {
-            jsonArray.put(countryData.country);
+        for (CountryData countryData : data) {
+            jsonArray.put(countryData.getCountry());
         }
 
         return jsonArray.toString();
@@ -215,25 +262,30 @@ public class DataMapsView extends WebView {
     }
 
     private class MapData {
-        private final int markerPinWidth, markerPinHeight, width, height;
+        private final int markerPinWidth;
+        private final int markerPinHeight;
+        private final int width;
+        private final int height;
+        private String markerPinIcon;
         private final String countriesIso3Json;
 
-        private MapData(int markerPinWidth, int markerPinHeight,
+        private MapData(int markerPinWidth, int markerPinHeight, String markerPinIcon,
                         int width, int height, String countriesIso3Json) {
             this.markerPinWidth = markerPinWidth;
             this.markerPinHeight = markerPinHeight;
             this.countriesIso3Json = countriesIso3Json;
             this.width = width;
             this.height = height;
+            this.markerPinIcon = markerPinIcon;
         }
 
         @JavascriptInterface
-        public int getMarkerPinWidth() {
+        public int getMarkerIconWidth() {
             return markerPinWidth;
         }
 
         @JavascriptInterface
-        public int getMarkerPinHeight() {
+        public int getMarkerIconHeight() {
             return markerPinHeight;
         }
 
@@ -250,6 +302,11 @@ public class DataMapsView extends WebView {
         @JavascriptInterface
         public String getCountriesJson() {
             return countriesIso3Json;
+        }
+
+        @JavascriptInterface
+        public String getMarkerIcon() {
+            return markerPinIcon;
         }
     }
 }

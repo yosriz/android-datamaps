@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="DataMapsView">
+        <attr name="marker_icon" format="string" />
+        <attr name="marker_width" format="dimension" />
+        <attr name="marker_height" format="dimension" />
+    </declare-styleable>
+</resources>
