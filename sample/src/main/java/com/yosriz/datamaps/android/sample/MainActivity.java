@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         DataMapsView dataMapsView = (DataMapsView) findViewById(R.id.map);
-        findViewById(R.id.refresh).setOnClickListener(v -> dataMapsView.reload());
 
         populateMap(dataMapsView);
     }

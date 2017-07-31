@@ -4,14 +4,11 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.res.TypedArray;
-import android.graphics.Point;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.annotation.RawRes;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -27,13 +24,17 @@ import java.util.Scanner;
 
 public class DataMapsView extends WebView {
 
-    public static final double MAP_ASPECT_RATIO = 0.66875;
     private GeoChartLoadingListener geoChartLoadingListener;
     private Handler handler = new Handler();
-    private Thread thread;
     private String markerIcon;
     private int markerWidth;
     private int markerHeight;
+    private String projection;
+    private boolean dataLoaded = false;
+    private boolean globalLayoutOccurred = false;
+    private DataMapsData mapData;
+    private boolean htmlLoaded;
+    private MapDataInterface mapDataInterface = new MapDataInterface();
 
     public interface GeoChartLoadingListener {
         void onSuccess();
@@ -49,7 +50,7 @@ public class DataMapsView extends WebView {
         this(context, attrs, 0);
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint({"SetJavaScriptEnabled", "DefaultLocale"})
     public DataMapsView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
@@ -69,9 +70,28 @@ public class DataMapsView extends WebView {
             markerWidth = ta.getDimensionPixelSize(R.styleable.DataMapsView_marker_width, 50);
             markerHeight = ta.getDimensionPixelSize(R.styleable.DataMapsView_marker_height, 50);
             markerIcon = ta.getString(R.styleable.DataMapsView_marker_icon);
+            projection = ta.getString(R.styleable.DataMapsView_projection);
         } finally {
             ta.recycle();
         }
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                String html = readStringFromRawResources(R.raw.datamaps);
+                handler.post(() -> {
+                            addJavascriptInterface(mapDataInterface, "mapData");
+                            loadDataWithBaseURL("file:///android_asset/", html, "text/html", "utf-8", null);
+                        }
+                );
+            }
+        };
+        thread.start();
+
+        getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            globalLayoutOccurred = true;
+            setAndLoadMapData();
+        });
     }
 
     private void enableDebuggingIfNecessary(Context context) {
@@ -105,6 +125,13 @@ public class DataMapsView extends WebView {
                     geoChartLoadingListener.onFailure();
                 }
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                htmlLoaded = true;
+                setAndLoadMapData();
+            }
+
         });
     }
 
@@ -114,19 +141,9 @@ public class DataMapsView extends WebView {
 
     @SuppressLint("DefaultLocale")
     public void loadData(DataMapsData data) {
-
-        cancelCurrentLoad();
-        setMapData(data);
-        thread = new Thread() {
-            @Override
-            public void run() {
-                String html = readStringFromRawResources(R.raw.datamaps);
-                handler.post(() ->
-                        loadDataWithBaseURL("file:///android_asset/", html, "text/html", "utf-8", null)
-                );
-            }
-        };
-        thread.start();
+        mapData = data;
+        dataLoaded = true;
+        setAndLoadMapData();
     }
 
     /**
@@ -156,6 +173,15 @@ public class DataMapsView extends WebView {
         this.markerHeight = markerHeight;
     }
 
+    /**
+     * Set map projection
+     *
+     * @param projection map projection
+     */
+    public void setProjection(String projection) {
+        this.projection = projection;
+    }
+
     public String getMarkerIcon() {
         return markerIcon;
     }
@@ -168,34 +194,29 @@ public class DataMapsView extends WebView {
         return markerHeight;
     }
 
-    private void cancelCurrentLoad() {
-        handler.removeCallbacksAndMessages(null);
-        if (thread != null && !thread.isInterrupted()) {
-            thread.interrupt();
+    public String getProjection() {
+        return projection;
+    }
+
+    private void setAndLoadMapData() {
+        if (dataLoaded && htmlLoaded && globalLayoutOccurred) {
+            Log.d("DataMapsView", "getHeight() = " + getHeight() + "getWidth() = " + getWidth());
+            String dataJson = toJson(mapData.getCountries());
+            mapDataInterface.setCountriesIso3Json(dataJson);
+            mapDataInterface.setHeight(getHeight());
+            mapDataInterface.setWidth(getWidth());
+            mapDataInterface.setMarkerPinHeight(markerHeight);
+            mapDataInterface.setMarkerPinWidth(markerWidth);
+            mapDataInterface.setMarkerPinIcon(markerIcon);
+            mapDataInterface.setProjection(projection);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                evaluateJavascript("loadMap()", null);
+            } else {
+                loadUrl("javascript:loadMap()");
+            }
+            dataLoaded = htmlLoaded = globalLayoutOccurred = false;
         }
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-
-        cancelCurrentLoad();
-    }
-
-    private void setMapData(DataMapsData data) {
-
-        Point webViewSize = calculateWebViewSize();
-        setWebViewHeight(webViewSize);
-
-
-        String dataJson = toJson(data.getCountries());
-        MapData mapData = new MapData(markerWidth,
-                markerHeight,
-                markerIcon,
-                webViewSize.x, webViewSize.y,
-                dataJson
-        );
-        addJavascriptInterface(mapData, "mapData");
     }
 
     private String toJson(List<CountryData> data) {
@@ -206,35 +227,6 @@ public class DataMapsView extends WebView {
         }
 
         return jsonArray.toString();
-    }
-
-    @NonNull
-    private Point calculateWebViewSize() {
-        Point displaySize = getDisplaySize();
-        int margins = 0;
-        if (getLayoutParams() instanceof MarginLayoutParams) {
-            MarginLayoutParams layoutParams = (MarginLayoutParams) getLayoutParams();
-            margins = layoutParams.getMarginStart() + layoutParams.getMarginEnd();
-        }
-        Point webViewSize = new Point();
-        webViewSize.x = displaySize.x - margins;
-        webViewSize.y = (int) ((double) webViewSize.x * MAP_ASPECT_RATIO);
-        return webViewSize;
-    }
-
-    private void setWebViewHeight(Point webViewSize) {
-        ViewGroup.LayoutParams lp = getLayoutParams();
-        lp.height = webViewSize.y;
-        setLayoutParams(lp);
-    }
-
-    @NonNull
-    private Point getDisplaySize() {
-        Point displaySize;
-        displaySize = new Point();
-        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-        wm.getDefaultDisplay().getSize(displaySize);
-        return displaySize;
     }
 
     private String readStringFromRawResources(@RawRes int res) {
@@ -261,22 +253,41 @@ public class DataMapsView extends WebView {
         }
     }
 
-    private class MapData {
-        private final int markerPinWidth;
-        private final int markerPinHeight;
-        private final int width;
-        private final int height;
+    private class MapDataInterface {
+        private int markerPinWidth;
+        private int markerPinHeight;
+        private int width;
+        private int height;
         private String markerPinIcon;
-        private final String countriesIso3Json;
+        private String countriesIso3Json;
+        private String projection;
 
-        private MapData(int markerPinWidth, int markerPinHeight, String markerPinIcon,
-                        int width, int height, String countriesIso3Json) {
+        public void setMarkerPinWidth(int markerPinWidth) {
             this.markerPinWidth = markerPinWidth;
+        }
+
+        public void setMarkerPinHeight(int markerPinHeight) {
             this.markerPinHeight = markerPinHeight;
-            this.countriesIso3Json = countriesIso3Json;
+        }
+
+        public void setWidth(int width) {
             this.width = width;
+        }
+
+        public void setHeight(int height) {
             this.height = height;
+        }
+
+        public void setMarkerPinIcon(String markerPinIcon) {
             this.markerPinIcon = markerPinIcon;
+        }
+
+        public void setCountriesIso3Json(String countriesIso3Json) {
+            this.countriesIso3Json = countriesIso3Json;
+        }
+
+        public void setProjection(String projection) {
+            this.projection = projection;
         }
 
         @JavascriptInterface
@@ -308,5 +319,11 @@ public class DataMapsView extends WebView {
         public String getMarkerIcon() {
             return markerPinIcon;
         }
+
+        @JavascriptInterface
+        public String getProjection() {
+            return projection;
+        }
+
     }
 }
