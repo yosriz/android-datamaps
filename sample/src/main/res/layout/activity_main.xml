@@ -11,14 +11,19 @@
         android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_margin="5dp"
-        android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        datamaps:default_fill_color="#bfbfbf"
         datamaps:marker_height="35dp"
         datamaps:marker_icon="pin.svg"
         datamaps:marker_width="35dp"
         datamaps:projection="mercator" />
 
+    <Button
+        android:id="@+id/refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="refresh"
+        app:layout_constraintTop_toBottomOf="@+id/map" />
 </android.support.constraint.ConstraintLayout>
 

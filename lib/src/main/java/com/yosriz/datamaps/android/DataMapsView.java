@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RawRes;
@@ -16,6 +17,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.List;
@@ -35,6 +38,7 @@ public class DataMapsView extends WebView {
     private DataMapsData mapData;
     private boolean htmlLoaded;
     private MapDataInterface mapDataInterface = new MapDataInterface();
+    private int defaultfillColor;
 
     public interface GeoChartLoadingListener {
         void onSuccess();
@@ -71,6 +75,7 @@ public class DataMapsView extends WebView {
             markerHeight = ta.getDimensionPixelSize(R.styleable.DataMapsView_marker_height, 50);
             markerIcon = ta.getString(R.styleable.DataMapsView_marker_icon);
             projection = ta.getString(R.styleable.DataMapsView_projection);
+            defaultfillColor = ta.getColor(R.styleable.DataMapsView_default_fill_color, Color.LTGRAY);
         } finally {
             ta.recycle();
         }
@@ -200,30 +205,42 @@ public class DataMapsView extends WebView {
 
     private void setAndLoadMapData() {
         if (dataLoaded && htmlLoaded && globalLayoutOccurred) {
-            Log.d("DataMapsView", "getHeight() = " + getHeight() + "getWidth() = " + getWidth());
+            //Log.d("DataMapsView", "getHeight() = " + getHeight() + "getWidth() = " + getWidth());
             String dataJson = toJson(mapData.getCountries());
-            mapDataInterface.setCountriesIso3Json(dataJson);
+            mapDataInterface.setCountriesJson(dataJson);
             mapDataInterface.setHeight(getHeight());
             mapDataInterface.setWidth(getWidth());
             mapDataInterface.setMarkerPinHeight(markerHeight);
             mapDataInterface.setMarkerPinWidth(markerWidth);
             mapDataInterface.setMarkerPinIcon(markerIcon);
             mapDataInterface.setProjection(projection);
+            mapDataInterface.setDefaultFillColor(Utils.colorToHexString(defaultfillColor));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 evaluateJavascript("loadMap()", null);
             } else {
                 loadUrl("javascript:loadMap()");
             }
-            dataLoaded = htmlLoaded = globalLayoutOccurred = false;
+            dataLoaded = htmlLoaded = false;
         }
     }
 
     private String toJson(List<CountryData> data) {
         JSONArray jsonArray = new JSONArray();
+        try {
+            for (CountryData countryData : data) {
+                JSONObject countryJson = new JSONObject();
 
-        for (CountryData countryData : data) {
-            jsonArray.put(countryData.getCountry());
+                countryJson.put("country", countryData.getCountry());
+                countryJson.put("color", countryData.getColor());
+                countryJson.put("marker", countryData.doesHaveMarker());
+
+                jsonArray.put(countryJson);
+            }
+
+        } catch (JSONException e) {
+            Log.e(DataMapsView.class.getSimpleName(), "Fatal Error, Cannot serialize country data to json", e);
+            e.printStackTrace();
         }
 
         return jsonArray.toString();
@@ -259,8 +276,9 @@ public class DataMapsView extends WebView {
         private int width;
         private int height;
         private String markerPinIcon;
-        private String countriesIso3Json;
+        private String countriesJson;
         private String projection;
+        private String defaultFillColor;
 
         public void setMarkerPinWidth(int markerPinWidth) {
             this.markerPinWidth = markerPinWidth;
@@ -282,8 +300,8 @@ public class DataMapsView extends WebView {
             this.markerPinIcon = markerPinIcon;
         }
 
-        public void setCountriesIso3Json(String countriesIso3Json) {
-            this.countriesIso3Json = countriesIso3Json;
+        public void setCountriesJson(String countriesJson) {
+            this.countriesJson = countriesJson;
         }
 
         public void setProjection(String projection) {
@@ -312,7 +330,7 @@ public class DataMapsView extends WebView {
 
         @JavascriptInterface
         public String getCountriesJson() {
-            return countriesIso3Json;
+            return countriesJson;
         }
 
         @JavascriptInterface
@@ -325,5 +343,13 @@ public class DataMapsView extends WebView {
             return projection;
         }
 
+        @JavascriptInterface
+        public String getDefaultFillColor() {
+            return defaultFillColor;
+        }
+
+        public void setDefaultFillColor(String defaultFillColor) {
+            this.defaultFillColor = defaultFillColor;
+        }
     }
 }

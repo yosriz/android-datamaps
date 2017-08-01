@@ -5,5 +5,6 @@
         <attr name="marker_width" format="dimension" />
         <attr name="marker_height" format="dimension" />
         <attr name="projection" format="string" />
+        <attr name="default_fill_color" format="color" />
     </declare-styleable>
 </resources>

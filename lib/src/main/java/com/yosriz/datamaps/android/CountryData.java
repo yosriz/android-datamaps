@@ -6,26 +6,43 @@ import android.support.annotation.ColorInt;
 public class CountryData {
 
     private final String country;
-    private final transient int color;
     private final String colorString;
+    private final boolean marker;
 
     /**
-     * Constructs country data
+     * Constructs country data with custom color
      *
      * @param country 3 letters ISO string represents a country
      * @param color   country color int
+     * @param marker  should add marker to this country
      */
-    public CountryData(String country, @ColorInt int color) {
+    public CountryData(String country, @ColorInt int color, boolean marker) {
         this.country = country;
-        this.color = color;
-        colorString = String.format("#%06X", (0xFFFFFF & color));
+        this.colorString = Utils.colorToHexString(color);
+        this.marker = marker;
+    }
+
+    /**
+     * Constructs country data, without custom color
+     *
+     * @param country 3 letters ISO string represents a country
+     * @param marker  should add marker to this country
+     */
+    public CountryData(String country, boolean marker) {
+        this.country = country;
+        this.colorString = null;
+        this.marker = marker;
     }
 
     public String getCountry() {
         return country;
     }
 
-    public int getColor() {
-        return color;
+    public String getColor() {
+        return colorString;
+    }
+
+    public boolean doesHaveMarker() {
+        return marker;
     }
 }
