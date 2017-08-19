@@ -1,17 +1,16 @@
 package com.yosriz.datamaps.android.sample;
 
 import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.yosriz.datamaps.android.CountryData;
-import com.yosriz.datamaps.android.DataMapsView;
 import com.yosriz.datamaps.android.DataMapsData;
+import com.yosriz.datamaps.android.DataMapsView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,8 +33,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateMap(DataMapsView dataMapsView) {
         List<CountryData> countryDataList = new ArrayList<>();
-        countryDataList.add(new CountryData("USA", Color.BLUE, true));
-        countryDataList.add(new CountryData("ISR", toggle));
+        countryDataList.add(new CountryData.Builder()
+                .color(Color.BLUE)
+                .country("USA")
+                .markerVisibility(true)
+                .build());
+        countryDataList.add(
+                new CountryData.Builder()
+                        .color(Color.BLUE)
+                        .country("ISR")
+                        .markerVisibility(toggle)
+                        .build());
         DataMapsData mapData = new DataMapsData(countryDataList);
 
         dataMapsView.setGeoChartLoadingListener(new DataMapsView.GeoChartLoadingListener() {

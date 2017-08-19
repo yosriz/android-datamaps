@@ -7,31 +7,16 @@ public class CountryData {
 
     private final String country;
     private final String colorString;
-    private final boolean marker;
+    private final boolean doesHaveMarker;
+    private final float value;
+    private final String label;
 
-    /**
-     * Constructs country data with custom color
-     *
-     * @param country 3 letters ISO string represents a country
-     * @param color   country color int
-     * @param marker  should add marker to this country
-     */
-    public CountryData(String country, @ColorInt int color, boolean marker) {
-        this.country = country;
+    private CountryData(boolean putMarker, int color, String country, float value, String label) {
         this.colorString = Utils.colorToHexString(color);
-        this.marker = marker;
-    }
-
-    /**
-     * Constructs country data, without custom color
-     *
-     * @param country 3 letters ISO string represents a country
-     * @param marker  should add marker to this country
-     */
-    public CountryData(String country, boolean marker) {
         this.country = country;
-        this.colorString = null;
-        this.marker = marker;
+        this.value = value;
+        this.label = label;
+        this.doesHaveMarker = putMarker;
     }
 
     public String getCountry() {
@@ -43,6 +28,56 @@ public class CountryData {
     }
 
     public boolean doesHaveMarker() {
-        return marker;
+        return doesHaveMarker;
+    }
+
+    public float getValue() {
+        return value;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public static class Builder {
+        private boolean putMarker;
+        private @ColorInt int color;
+        private String country;
+        private float value;
+        private String label;
+
+        public Builder markerVisibility(boolean show) {
+            putMarker = show;
+            return this;
+        }
+
+        public Builder color(@ColorInt int color) {
+            this.color = color;
+            return this;
+        }
+
+        /**
+         * Sets country
+         *
+         * @param country 3 letters ISO string represents a country
+         */
+        public Builder country(String country) {
+            this.country = country;
+            return this;
+        }
+
+        public Builder value(float value) {
+            this.value = value;
+            return this;
+        }
+
+        public Builder label(String label) {
+            this.label = label;
+            return this;
+        }
+
+        public CountryData build() {
+            return new CountryData(putMarker, color, country, value, label);
+        }
     }
 }
