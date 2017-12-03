@@ -1,11 +1,11 @@
-## android-data-maps
+# android-data-maps
 
 Customizable map visualization for Android, a wrapper over JavaScript [DataMaps](https://github.com/markmarkoh/datamaps) library.
 
 Supporting custom marker, custom color for each country.
 
-![Screenshot_1512334958.png]({{site.baseurl}}/images/Screenshot_1512334958.png)
-![Screenshot_1512334708.png]({{site.baseurl}}/images/Screenshot_1512334708.png)
+![alt text](/images/Screenshot_1512334958.png)
+![alt text](/images/Screenshot_1512334708.png)
 
 **Dependency**
 
@@ -23,8 +23,9 @@ allprojects {
 Add this to your module's build.gradle file:
 
 
-```dependencies {
-    compile 'com.github.yosriz:android-datamaps:{latest-version}'	
+```
+dependencies {
+    compile 'com.github.yosriz:android-datamaps:0.0.1'	
 }
 ````
 
