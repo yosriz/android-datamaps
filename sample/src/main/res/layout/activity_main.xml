@@ -13,7 +13,7 @@
         android:layout_height="300dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        datamaps:default_fill_color="#bfbfbf"
+        datamaps:default_fill_color="#bdbdbd"
         datamaps:marker_height="35dp"
         datamaps:marker_icon="pin.svg"
         datamaps:marker_width="35dp"

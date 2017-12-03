@@ -46,7 +46,10 @@ public class CountryData {
         private float value;
         private String label;
 
-        public Builder markerVisibility(boolean show) {
+        /**
+         * Whether to add marker for this country on map
+         */
+        public Builder marker(boolean show) {
             putMarker = show;
             return this;
         }

@@ -1,7 +1,7 @@
 package com.yosriz.datamaps.android.sample;
 
-import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -15,7 +15,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     public static String TAG = MainActivity.class.getSimpleName();
-    public boolean toggle = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +33,39 @@ public class MainActivity extends AppCompatActivity {
     private void populateMap(DataMapsView dataMapsView) {
         List<CountryData> countryDataList = new ArrayList<>();
         countryDataList.add(new CountryData.Builder()
-                .color(Color.BLUE)
+                .color(ContextCompat.getColor(this, R.color.colorA))
                 .country("USA")
-                .markerVisibility(true)
+                .marker(true)
                 .build());
         countryDataList.add(
                 new CountryData.Builder()
-                        .color(Color.BLUE)
-                        .country("ISR")
-                        .markerVisibility(toggle)
+                        .color(ContextCompat.getColor(this, R.color.colorB))
+                        .country("DEU")
+                        .marker(true)
+                        .build());
+        countryDataList.add(
+                new CountryData.Builder()
+                        .color(ContextCompat.getColor(this, R.color.colorC))
+                        .country("MEX")
+                        .marker(false)
+                        .build());
+        countryDataList.add(
+                new CountryData.Builder()
+                        .color(ContextCompat.getColor(this, R.color.colorD))
+                        .country("CHN")
+                        .marker(true)
+                        .build());
+        countryDataList.add(
+                new CountryData.Builder()
+                        .color(ContextCompat.getColor(this, R.color.colorE))
+                        .country("BRA")
+                        .marker(false)
+                        .build());
+        countryDataList.add(
+                new CountryData.Builder()
+                        .color(ContextCompat.getColor(this, R.color.colorF))
+                        .country("DZA")
+                        .marker(true)
                         .build());
         DataMapsData mapData = new DataMapsData(countryDataList);
 
@@ -58,6 +81,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         dataMapsView.loadData(mapData);
-        this.toggle = !this.toggle;
     }
 }
